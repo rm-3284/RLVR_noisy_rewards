@@ -93,8 +93,19 @@ def create_local_venv(
     # Command doesn't matter, since `uv` syncs the environment no matter the command.
     exec_cmd.extend(["echo", f"Finished creating venv {venv_path}"])
 
+    # Mirror optional extras from py_executable (e.g. --extra automodel) so the first sync
+    # does not prune packages from the worker venv that `uv run --extra ...` will need.
+    sync_cmd = ["uv", "sync", "--directory", git_root]
+    i = 0
+    while i < len(exec_cmd):
+        if exec_cmd[i] == "--extra" and i + 1 < len(exec_cmd):
+            sync_cmd.extend(["--extra", exec_cmd[i + 1]])
+            i += 2
+        else:
+            i += 1
+
     # Always run uv sync first to ensure the build requirements are set (for --no-build-isolation packages)
-    subprocess.run(["uv", "sync", "--directory", git_root], env=env, check=True)
+    subprocess.run(sync_cmd, env=env, check=True)
     subprocess.run(exec_cmd, env=env, check=True)
 
     # Return the path to the python executable in the virtual environment

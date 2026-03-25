@@ -24,6 +24,7 @@ dependencies = [
   "colored==2.2.3",
   "ray[default]==2.49.2",
   "transformers==4.57.1",
+  "huggingface-hub>=0.34.0,<1.0", # transformers 4.57.x requires hub <1; pin so uv does not pull 1.x
   "wandb>=0.25.0",
   "numpy",
   "datasets>=4.0.0",
