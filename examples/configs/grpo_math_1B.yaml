@@ -81,7 +81,7 @@ checkpointing:
   save_consolidated: false
 
 policy:
-  model_name: "Qwen/Qwen2.5-1.5B"
+  model_name: "/n/fs/vision-mix/rm4411/hf_models/Qwen2.5-1.5B"
   tokenizer:
     name: ${policy.model_name} ## specify if you'd like to use a tokenizer different from the model's default
     chat_template_kwargs: null # can be used to pass kwargs to the chat template, e.g., enable_thinking=true
@@ -358,8 +358,9 @@ logger:
   swanlab_enabled: false # Disable SwanLab logging
   monitor_gpus: true  # If true, will monitor GPU usage and log to wandb and/or tensorboard
   wandb:
-    project: "grpo-dev"
+    project: "RLVR"
     name: "grpo-dev-logger"
+    mode: "offline"
   swanlab:
     project: "grpo-dev"
     name: "grpo-dev-logger"
