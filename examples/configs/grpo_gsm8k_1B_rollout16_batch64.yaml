@@ -9,6 +9,9 @@ checkpointing:
 grpo:
   num_prompts_per_step: 64
 
+policy:
+  train_global_batch_size: 1024 # 64 * 16
+
 # Replace parent's OpenMath train/validation/default entirely (same pattern as gdpo_math_1B.yaml).
 data:
   _override_: true

@@ -9,6 +9,10 @@ checkpointing:
 grpo:
   num_prompts_per_step: 16
 
+# Must match num_prompts_per_step * num_generations_per_prompt (see grpo_math_1B defaults) or training fails to shard.
+policy:
+  train_global_batch_size: 256 # 16 * 16
+
 # Replace parent's OpenMath train/validation/default entirely (same pattern as gdpo_math_1B.yaml).
 data:
   _override_: true

@@ -4,10 +4,13 @@
 defaults: grpo_math_1B.yaml
 
 checkpointing:
-  checkpoint_dir: "results/grpo_gsm8k_batch32rollout32"
+  checkpoint_dir: "results/grpo_gsm8k_batch32rollout32_v1"
 
 grpo:
   num_generations_per_prompt: 32
+
+policy:
+  train_global_batch_size: 1024 # 32 * 32
 
 # Replace parent's OpenMath train/validation/default entirely (same pattern as gdpo_math_1B.yaml).
 data:
@@ -34,4 +37,4 @@ data:
 
 logger:
   wandb:
-    name: "grpo-gsm8k-batch32rollout32-logger"
+    name: "grpo-gsm8k-batch32rollout32_V1-logger"
