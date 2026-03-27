@@ -617,12 +617,21 @@ class VllmGenerationWorker(BaseVllmGenerationWorker):
 
         input_ids = data["input_ids"]
         input_lengths = data["input_lengths"]
+        batch_size = input_ids.shape[0]
         batch_stop_strings: list[list[str]] = data.get("stop_strings", [])
         stop_strings = self._merge_stop_strings(batch_stop_strings)
-        sampling_params = self._build_sampling_params(
-            greedy=greedy,
-            stop_strings=stop_strings,
-        )
+
+        max_ctx = self.cfg["vllm_cfg"]["max_model_len"]
+        policy_cap = self.cfg.get("_policy_max_total_sequence_length")
+        if policy_cap is not None:
+            max_ctx = min(max_ctx, policy_cap)
+
+        allowed_new_per_sample: list[int] = []
+        for i in range(batch_size):
+            prompt_len = int(input_lengths[i].item())
+            allowed_new_per_sample.append(
+                max(0, min(self.cfg["max_new_tokens"], max_ctx - prompt_len))
+            )
 
         # verify inputs have correct padding
         verify_right_padding(data, pad_value=self.cfg["_pad_token_id"])
@@ -633,11 +642,40 @@ class VllmGenerationWorker(BaseVllmGenerationWorker):
         # Convert inputs to vLLM format
         prompts = format_prompt_for_vllm_generation(data)
 
-        # Generate outputs
+        # Generate outputs (per-sample max_tokens so prompt + gen stays within policy / vLLM ctx)
         assert self.llm is not None, (
             "Attempting to generate with either an uninitialized vLLM or non-model-owner"
         )
-        outputs = self.llm.generate(prompts, sampling_params)
+        vllm_row_indices = [i for i in range(batch_size) if allowed_new_per_sample[i] > 0]
+        sub_outputs: list[Any] = []
+        if vllm_row_indices:
+            sub_prompts = [prompts[i] for i in vllm_row_indices]
+            allowed_subset = [allowed_new_per_sample[i] for i in vllm_row_indices]
+            if len(set(allowed_subset)) == 1:
+                sampling_params = self._build_sampling_params(
+                    greedy=greedy,
+                    stop_strings=stop_strings,
+                    max_new_tokens=allowed_subset[0],
+                )
+                sub_outputs = self.llm.generate(sub_prompts, sampling_params)
+            else:
+                sampling_params_list = [
+                    self._build_sampling_params(
+                        greedy=greedy,
+                        stop_strings=stop_strings,
+                        max_new_tokens=a,
+                    )
+                    for a in allowed_subset
+                ]
+                sub_outputs = self.llm.generate(sub_prompts, sampling_params_list)
+
+        vllm_out_iter = iter(sub_outputs)
+        outputs: list[Any] = []
+        for i in range(batch_size):
+            if allowed_new_per_sample[i] > 0:
+                outputs.append(next(vllm_out_iter))
+            else:
+                outputs.append(None)
 
         # Process the outputs - but preserve the original input padding structure
         output_ids_list = []
@@ -646,14 +684,24 @@ class VllmGenerationWorker(BaseVllmGenerationWorker):
         unpadded_sequence_lengths = []
         truncated_list = []  # Track if response was truncated (hit max_tokens)
         max_length = 0
-        for output in outputs:
-            max_length = max(max_length, len(output.outputs[0].token_ids))
+        for out in outputs:
+            if out is not None:
+                max_length = max(max_length, len(out.outputs[0].token_ids))
 
         for i, output in enumerate(outputs):
             # Extract generated tokens
-            sequence_length = input_lengths[i]
-            generation = output.outputs[0]
-            generated_tokens = list(generation.token_ids)
+            sequence_length = input_lengths[i].item()
+            if output is None:
+                generated_tokens: list[int] = []
+                finish_reason = None
+                gen_logprobs = None
+            else:
+                generation = output.outputs[0]
+                generated_tokens = list(generation.token_ids)
+                finish_reason = generation.finish_reason
+                gen_logprobs = (
+                    generation.logprobs if hasattr(generation, "logprobs") else None
+                )
 
             # Calculate total sequence length (original input length + generated tokens)
             total_length = padded_input_length + max_length
@@ -673,9 +721,9 @@ class VllmGenerationWorker(BaseVllmGenerationWorker):
 
             output_ids_list.append(full_output)
             full_logprobs = torch.zeros(total_length, dtype=torch.float32)
-            if hasattr(generation, "logprobs") and generation.logprobs:
+            if gen_logprobs:
                 try:
-                    for idx, logprob_dict in enumerate(generation.logprobs):
+                    for idx, logprob_dict in enumerate(gen_logprobs):
                         if logprob_dict:
                             position = sequence_length + idx
                             full_logprobs[position] = next(iter(logprob_dict.items()))[
@@ -693,7 +741,7 @@ class VllmGenerationWorker(BaseVllmGenerationWorker):
             unpadded_sequence_lengths.append(response_length)
 
             # Check if response was truncated (hit max_tokens length limit)
-            is_truncated = generation.finish_reason == "length"
+            is_truncated = finish_reason == "length" if finish_reason is not None else False
             truncated_list.append(is_truncated)
 
             assert response_length <= self.llm.llm_engine.model_config.max_model_len, (

@@ -726,9 +726,11 @@ class VllmAsyncGenerationWorker(BaseVllmGenerationWorker):
                 [per_sample_stop_strings] if per_sample_stop_strings else None
             )
 
-            remaining_ctx = (
-                self.cfg["vllm_cfg"]["max_model_len"] - current_input_actual_length
-            )
+            max_ctx = self.cfg["vllm_cfg"]["max_model_len"]
+            policy_cap = self.cfg.get("_policy_max_total_sequence_length")
+            if policy_cap is not None:
+                max_ctx = min(max_ctx, policy_cap)
+            remaining_ctx = max_ctx - current_input_actual_length
             allowed_new_tokens = max(0, min(self.cfg["max_new_tokens"], remaining_ctx))
 
             # Handle case where no tokens can be generated due to length constraints

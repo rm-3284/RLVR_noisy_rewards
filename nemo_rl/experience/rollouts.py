@@ -507,11 +507,10 @@ def run_multi_turn_rollout(
                 len(tokenized_obs) + len(generated_ids[i]) + active_input_lengths[i]
                 >= max_seq_len
             ):
-                tokens_left_for_obs = max_seq_len - (
-                    len(generated_ids[i]) + active_input_lengths[i]
-                )
-                assert tokens_left_for_obs >= 0, (
-                    f"tokens_left_for_obs={tokens_left_for_obs} should not be negative. This should not happen if the inference engine respects the max sequence length."
+                tokens_left_for_obs = max(
+                    0,
+                    max_seq_len
+                    - (len(generated_ids[i]) + active_input_lengths[i]),
                 )
                 # truncate
                 tokenized_obs = tokenized_obs[:tokens_left_for_obs]

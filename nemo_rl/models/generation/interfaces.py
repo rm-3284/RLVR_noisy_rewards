@@ -129,6 +129,9 @@ class GenerationConfig(TypedDict):
     colocated: NotRequired[ColocationConfig]
     # This isn't meant to be passed by the user, but is populated by nemo_rl.models.generation.__init__.configure_generation_config
     _pad_token_id: NotRequired[int]
+    # Set by training entrypoints (e.g. GRPO) so vLLM does not exceed policy.max_total_sequence_length
+    # when vllm_cfg.max_model_len is larger (needed for multi-turn rollouts).
+    _policy_max_total_sequence_length: NotRequired[int]
 
 
 class GenerationDatumSpec(TypedDict):
