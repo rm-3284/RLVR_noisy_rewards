@@ -1,0 +1,37 @@
+# GRPO on GSM8K: inherits grpo_math_1B.yaml (model, vLLM, loss, cluster, etc.) and only
+# overrides dataset + checkpoint paths. Built-in loader: nemo_rl.data.datasets.response_datasets.gsm8k.GSM8KDataset
+# (HF: openai/gsm8k, config main). Offline jobs need that dataset cached under HF_HOME.
+defaults: grpo_math_1B.yaml
+
+checkpointing:
+  checkpoint_dir: "results/grpo_gsm8k_batch16"
+
+grpo:
+  num_prompts_per_step: 16
+
+# Replace parent's OpenMath train/validation/default entirely (same pattern as gdpo_math_1B.yaml).
+data:
+  _override_: true
+
+  max_input_seq_length: ${policy.max_total_sequence_length}
+  shuffle: true
+  num_workers: 1
+  use_multiple_dataloader: false
+
+  train:
+    dataset_name: "gsm8k"
+    split: train
+
+  validation:
+    dataset_name: "gsm8k"
+    split: test
+
+  default:
+    prompt_file: null
+    system_prompt_file: "examples/prompts/gsm8k.txt"
+    processor: "math_hf_data_processor"
+    env_name: "math"
+
+logger:
+  wandb:
+    name: "grpo-gsm8k-batch16-logger"
