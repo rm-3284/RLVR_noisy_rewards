@@ -15,6 +15,7 @@ import contextlib
 import io
 import logging
 import re
+import random
 from typing import Any, NotRequired, TypedDict, Union
 
 import ray
@@ -61,6 +62,7 @@ def _mute_output():
 class HFVerifyWorker:
     def __init__(self) -> None:
         logging.getLogger("math_verify").setLevel(logging.CRITICAL)
+        self.rng = random.Random(42)
 
         # Use Latex and plain math extraction from predictions
         # https://github.com/huggingface/Math-Verify?tab=readme-ov-file#extraction-targets
@@ -107,6 +109,12 @@ class HFVerifyWorker:
                         ret_score, extracted_answer = self.verify_func(
                             [ground_truth_parsable], [response]
                         )
+                        p = kwargs.get("p", 0.0)
+                        clean = int(ret_score)
+                        if self.rng.random() < p:
+                            ret_score = 1 - clean
+                        else:
+                            ret_score = clean
                     else:
                         raise ValueError(
                             f"Unknown math_verify_impl: {math_verify_impl}. Expected 'hf_math_verify' or 'dapo_math_verify'."
@@ -460,6 +468,7 @@ class MathEnvironment(BaseMathEnvironment):
                 ground_truth_chunk,
                 return_extracted_answer,
                 math_verify_impl=self.cfg.get("math_verify_impl", "hf_math_verify"),
+                p=self.cfg.get("p", 0.0),
             )
             for i, (chunk, ground_truth_chunk) in enumerate(
                 zip(chunked_assistant_response_batch, chunked_ground_truths)
