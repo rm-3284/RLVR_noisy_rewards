@@ -7,9 +7,6 @@ grpo:
   num_prompts_per_step: 16
   num_generations_per_prompt: 8
 
-policy:
-  train_global_batch_size: 128
-
 data:
   _override_: true
   max_input_seq_length: ${policy.max_total_sequence_length}
