@@ -32,6 +32,12 @@ data:
     processor: "math_hf_data_processor"
     env_name: "math"
 
+env:
+  math:
+    num_workers: 8
+    math_verify_impl: "hf_math_verify"
+    p: 0.0   # <-- your noise rate
+
 logger:
   wandb:
     name: "grpo-gsm8k-batch32rollout8-logger"
