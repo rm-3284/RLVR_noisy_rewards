@@ -78,7 +78,8 @@ def main() -> None:
             f"📊 Using checkpoint directory: {config['checkpointing']['checkpoint_dir']}"
         )
 
-    init_ray()
+    # Dedicated Ray session per experiment dir (safe for multiple Slurm jobs on one node).
+    init_ray(log_dir=os.path.join(config["logger"]["log_dir"], "ray"))
 
     # setup tokenizer
     tokenizer = get_tokenizer(config["policy"]["tokenizer"])

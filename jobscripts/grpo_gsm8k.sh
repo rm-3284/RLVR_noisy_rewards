@@ -22,6 +22,12 @@ export XDG_CACHE_HOME=/n/fs/vision-mix/rm4411/cache
 export CACHE_DIR=/n/fs/vision-mix/rm4411/cache
 ROOT=/n/fs/vision-mix/rm4411/RLVR_noisy_rewards
 cd "$ROOT" || exit 1
+
+# Slurm may set TMPDIR to a path that does not exist on compute nodes; fall back.
+if [[ -n "${TMPDIR:-}" && ! -d "$TMPDIR" ]]; then
+  export TMPDIR=/tmp
+fi
+
 # Do not use PYTHONPATH="$ROOT:$PYTHONPATH". If login rc adds e.g. ~/.local/lib/python3.11/site-packages,
 # that path is searched *before* the venv and shadows packages (huggingface_hub 1.7.2 vs 0.34 in .venv).
 export PYTHONPATH="$ROOT"
@@ -46,4 +52,10 @@ export CPLUS_INCLUDE_PATH="${CUDNN_INCLUDE_DIR}:${NV_PKG}/nccl/include${CPLUS_IN
 #   exec "$ROOT/.venv/bin/python" "$ROOT/examples/run_grpo.py" ...
 # DTensorPolicyWorkerV2 uses PY_EXECUTABLES.AUTOMODEL (nemo-automodel, TE, etc.); keep lock + extras in sync.
 uv sync --frozen --exact --extra automodel
+
+# Unique Ray session root per Slurm job (for scripts that call init_ray() without log_dir).
+# GRPO also passes logger.log_dir/ray into init_ray; both avoid cross-job Ray auto-attach.
+export NRL_RAY_SESSION_DIR="${TMPDIR:-/tmp}/nrl-ray-slurm-${SLURM_JOB_ID:-$$}"
+mkdir -p "$NRL_RAY_SESSION_DIR"
+
 uv run --frozen --extra automodel python examples/run_grpo.py --config examples/configs/grpo_gsm8k_1B_rollout32_batch32.yaml
