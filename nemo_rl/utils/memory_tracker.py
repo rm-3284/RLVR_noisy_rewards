@@ -40,15 +40,30 @@ class MemoryTrackerDataPoint(BaseModel):
         ]
 
     def get_snapshot_str(self) -> str:
-        ray_memory_summary = memory_summary(stats_only=True, num_entries=5)
+        # memory_summary() talks to Ray's global state; it fails if multiple Ray
+        # instances are visible on the host (e.g. leftover jobs) or Ray is unset.
+        if os.environ.get("NRL_SKIP_RAY_MEMORY_SNAPSHOT", "").lower() in (
+            "1",
+            "true",
+            "yes",
+        ):
+            ray_block = (
+                "\n⚡️ Ray memory snapshot: (skipped, NRL_SKIP_RAY_MEMORY_SNAPSHOT set)"
+            )
+        else:
+            try:
+                ray_mem = memory_summary(stats_only=True, num_entries=5)
+                ray_block = f"\n⚡️ Ray memory snapshot:\n{ray_mem}"
+            except (ConnectionError, OSError, RuntimeError) as e:
+                ray_block = (
+                    f"\n⚡️ Ray memory snapshot: (skipped: {type(e).__name__}: {e})"
+                )
         return f"""💭 Driver CPU memory tracker for {self.stage}:
 - Mem usage before                  {self.memory_used_before_stage_gb:>7.2f} GB
 - Mem usage after                   {self.memory_used_after_stage_gb:>7.2f} GB
 - Mem usage diff (after - before)   {self.mem_used_diff_gb:>+7.2f} GB
 - New variables: {self.new_variables}
-
-⚡️ Ray memory snapshot:
-{ray_memory_summary}"""
+{ray_block}"""
 
 
 class MemoryTracker(BaseModel):

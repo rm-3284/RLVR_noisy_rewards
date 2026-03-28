@@ -96,7 +96,10 @@ def init_ray(log_dir: Optional[str] = None) -> None:
     Otherwise, we will detach and start a fresh local cluster.
 
     Args:
-        log_dir: Optional directory to store Ray logs and temp files.
+        log_dir: If set, start a **dedicated** local cluster under ``<log_dir>/ray_session``
+            (no ``address="auto"``), so concurrent jobs on the same node do not attach to each
+            other's Ray. Slurm jobs can also set ``NRL_RAY_SESSION_DIR`` instead when ``log_dir``
+            is omitted.
     """
     # Set up runtime environment
     env_vars = dict(os.environ)
@@ -110,6 +113,38 @@ def init_ray(log_dir: Optional[str] = None) -> None:
     cvd = ",".join(sorted(cvd.split(",")))
     cvd_tag_prefix = "nrl_tag_"
     cvd_tag = f"{cvd_tag_prefix}{cvd.replace(',', '_')}"
+
+    ray_session_parent: Optional[str] = None
+    if log_dir:
+        ray_session_parent = log_dir
+    else:
+        nrl_ray = os.environ.get("NRL_RAY_SESSION_DIR", "").strip()
+        if nrl_ray:
+            ray_session_parent = nrl_ray
+
+    if ray_session_parent is not None:
+        abs_session = os.path.abspath(os.path.join(ray_session_parent, "ray_session"))
+        os.makedirs(abs_session, exist_ok=True)
+        if ray.is_initialized():
+            ray.shutdown()
+        local_runtime_env = dict(runtime_env)
+        local_runtime_env.pop("working_dir", None)
+        # Local cluster only; dashboard off to avoid fixed-port clashes when multiple jobs
+        # share one node.
+        ray.init(
+            log_to_driver=True,
+            include_dashboard=False,
+            runtime_env=local_runtime_env,
+            _temp_dir=abs_session,
+            resources={cvd_tag: 1},
+        )
+        logger.info(
+            "Started isolated local Ray cluster in %s with tag %r: %s",
+            abs_session,
+            cvd_tag,
+            ray.cluster_resources(),
+        )
+        return
 
     # Try to attach to an existing cluster
     try:
