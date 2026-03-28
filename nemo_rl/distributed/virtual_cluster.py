@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import hashlib
 import logging
 import os
 import sys
@@ -88,6 +89,39 @@ def _get_free_port_local() -> int:
     return port
 
 
+# Ray places session_*/sockets/* under _temp_dir; Linux AF_UNIX paths must stay ~≤107 bytes.
+_RAY_TEMP_PREFIX_MAX_LEN = 40
+
+
+def _isolated_ray_temp_dir(log_dir: Optional[str]) -> str:
+    """Pick ``_temp_dir`` for an isolated Ray cluster: short enough for AF_UNIX socket paths."""
+    import tempfile
+
+    tmp = tempfile.gettempdir()
+    env = (os.environ.get("NRL_RAY_SESSION_DIR") or "").strip()
+    if env:
+        # Job script sets a per-job dir; use as Ray root (no extra ``ray_session`` segment).
+        base = os.path.abspath(env)
+    elif log_dir:
+        base = os.path.abspath(os.path.join(log_dir, "ray_session"))
+    else:
+        base = os.path.join(tmp, f"nrl{os.getpid()}")
+
+    if len(base) <= _RAY_TEMP_PREFIX_MAX_LEN:
+        os.makedirs(base, exist_ok=True)
+        return base
+
+    short = os.path.join(tmp, "nrl" + hashlib.sha256(base.encode()).hexdigest()[:12])
+    os.makedirs(short, exist_ok=True)
+    logger.info(
+        "Ray _temp_dir would be too long (%d chars); using %s (stable hash of %s)",
+        len(base),
+        short,
+        base,
+    )
+    return short
+
+
 def init_ray(log_dir: Optional[str] = None) -> None:
     """Initialise Ray.
 
@@ -96,10 +130,9 @@ def init_ray(log_dir: Optional[str] = None) -> None:
     Otherwise, we will detach and start a fresh local cluster.
 
     Args:
-        log_dir: If set, start a **dedicated** local cluster under ``<log_dir>/ray_session``
-            (no ``address="auto"``), so concurrent jobs on the same node do not attach to each
-            other's Ray. Slurm jobs can also set ``NRL_RAY_SESSION_DIR`` instead when ``log_dir``
-            is omitted.
+        log_dir: If set (or ``NRL_RAY_SESSION_DIR`` is set), start a **dedicated** local cluster
+            (no ``address="auto"``). Paths under long repo trees are hashed to a short ``/tmp``
+            dir so Ray's Unix sockets stay within OS limits (~107 bytes).
     """
     # Set up runtime environment
     env_vars = dict(os.environ)
@@ -114,17 +147,8 @@ def init_ray(log_dir: Optional[str] = None) -> None:
     cvd_tag_prefix = "nrl_tag_"
     cvd_tag = f"{cvd_tag_prefix}{cvd.replace(',', '_')}"
 
-    ray_session_parent: Optional[str] = None
-    if log_dir:
-        ray_session_parent = log_dir
-    else:
-        nrl_ray = os.environ.get("NRL_RAY_SESSION_DIR", "").strip()
-        if nrl_ray:
-            ray_session_parent = nrl_ray
-
-    if ray_session_parent is not None:
-        abs_session = os.path.abspath(os.path.join(ray_session_parent, "ray_session"))
-        os.makedirs(abs_session, exist_ok=True)
+    if log_dir or (os.environ.get("NRL_RAY_SESSION_DIR") or "").strip():
+        abs_session = _isolated_ray_temp_dir(log_dir)
         if ray.is_initialized():
             ray.shutdown()
         local_runtime_env = dict(runtime_env)
