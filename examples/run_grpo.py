@@ -15,6 +15,7 @@
 import argparse
 import os
 import pprint
+import copy
 
 from omegaconf import OmegaConf
 
@@ -89,12 +90,15 @@ def main() -> None:
     )
 
     # setup data
+    val_env_configs = copy.deepcopy(config["env"])
+    for env_name in val_env_configs:
+        val_env_configs[env_name]["p"] = 0.0
     (
         dataset,
         val_dataset,
         task_to_env,
         val_task_to_env,
-    ) = setup_response_data(tokenizer, config["data"], config["env"])
+    ) = setup_response_data(tokenizer, config["data"], config["env"], val_env_configs)
 
     (
         policy,

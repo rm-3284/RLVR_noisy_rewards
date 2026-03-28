@@ -35,6 +35,7 @@ def setup_response_data(
     tokenizer: AutoProcessor | AutoTokenizer,
     data_config: DataConfig,
     env_configs: Optional[dict[str, Any]] = None,
+    val_env_configs: Optional[dict[str, Any]] = None,
     is_vlm: bool = False,
 ) -> Union[
     tuple[
@@ -80,10 +81,15 @@ def setup_response_data(
         print("\n▶ Setting up envs...")
         env_name_list = extract_necessary_env_names(data_config)
         envs = {}
+        val_envs = {}
         for env_name in env_name_list:
             registered_env_name = "vlm" if is_vlm else env_name
             envs[env_name] = create_env(
                 env_name=registered_env_name, env_config=env_configs[env_name]
+            )
+            v_cfg = (val_env_configs or env_configs)[env_name]
+            val_envs[env_name] = create_env(
+                env_name=registered_env_name, env_config=v_cfg
             )
 
     # ==========================
@@ -93,6 +99,7 @@ def setup_response_data(
     task_data_processors = {}
     task_data_preprocessors = {}
     task_to_env = {}
+    task_name_to_env_name = {}
     data_list = []
 
     if isinstance(data_config["train"], dict):
@@ -109,6 +116,7 @@ def setup_response_data(
         )
         # bind task_name to task_data_processors and task_to_env
         task_name = data.task_name
+        task_name_to_env_name[task_name] = cfg["env_name"]
         task_data_processors[task_name] = (data.task_spec, data.processor)
         if hasattr(data, "preprocessor") and data.preprocessor is not None:
             task_data_preprocessors[task_name] = data.preprocessor
@@ -169,7 +177,7 @@ def setup_response_data(
                     task_name
                 ]
             if has_envs:
-                val_task_to_env[task_name] = task_to_env[task_name]
+                val_task_to_env[task_name] = val_envs[task_name_to_env_name[task_name]]
 
     # validation dataset from config
     if "validation" in data_config and data_config["validation"] is not None:
@@ -194,7 +202,7 @@ def setup_response_data(
             if hasattr(val_data, "preprocessor") and val_data.preprocessor is not None:
                 val_task_data_preprocessors[task_name] = val_data.preprocessor
             if has_envs:
-                val_task_to_env[task_name] = envs[cfg["env_name"]]
+                val_task_to_env[task_name] = val_envs[cfg["env_name"]]
 
     # merge datasets
     val_dataset = None
