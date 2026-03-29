@@ -3,7 +3,7 @@ import itertools
 
 batch_sizes = [16, 32, 64]
 ps = [0.0, 0.1, 0.2, 0.3, 0.4]
-rollouts = [4, 8, 16, 32]
+rollouts = [4, 8, 16, 32, 64]
 
 out_dir = "generated_configs"
 os.makedirs(out_dir, exist_ok=True)
