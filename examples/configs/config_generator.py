@@ -18,6 +18,7 @@ grpo:
   num_generations_per_prompt: {rollout}
 
 policy:
+  model_name: "/n/fs/vision-mix/rm4411/hf_models/Qwen2.5-0.5B"
   train_global_batch_size: {total_batch}
 
 data:
