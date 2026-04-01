@@ -1,7 +1,7 @@
 defaults: grpo_math_1B.yaml
 
 checkpointing:
-  checkpoint_dir: "results/grpo_gsm8k_b64_r4_p0.3"
+  checkpoint_dir: "results/0.5Bgrpo_gsm8k_b64_r4_p0.3"
 
 grpo:
   num_prompts_per_step: 64
@@ -36,5 +36,6 @@ env:
     p: 0.3
 
 logger:
+  log_dir: "logs_0.5B"
   wandb:
-    name: "grpo-gsm8k-b64-r4-p0.3"
+    name: "grpo0.5B-gsm8k-b64-r4-p0.3"

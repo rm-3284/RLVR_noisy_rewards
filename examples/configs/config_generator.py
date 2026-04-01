@@ -11,7 +11,7 @@ os.makedirs(out_dir, exist_ok=True)
 template = """defaults: grpo_math_1B.yaml
 
 checkpointing:
-  checkpoint_dir: "results/grpo_gsm8k_b{batch}_r{rollout}_p{p}"
+  checkpoint_dir: "results/0.5Bgrpo_gsm8k_b{batch}_r{rollout}_p{p}"
 
 grpo:
   num_prompts_per_step: {batch}
@@ -46,8 +46,9 @@ env:
     p: {p}
 
 logger:
+  log_dir: "logs_0.5B"
   wandb:
-    name: "grpo-gsm8k-b{batch}-r{rollout}-p{p}"
+    name: "grpo0.5B-gsm8k-b{batch}-r{rollout}-p{p}"
 """
 
 count = 0
