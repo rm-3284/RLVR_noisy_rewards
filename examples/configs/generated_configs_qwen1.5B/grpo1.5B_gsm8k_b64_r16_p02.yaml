@@ -1,0 +1,43 @@
+defaults: grpo_math_1B.yaml
+
+checkpointing:
+  checkpoint_dir: "results/grpo1.5B-gsm8k-b64-r16-p02"
+
+grpo:
+  num_prompts_per_step: 64
+  num_generations_per_prompt: 16
+
+policy:
+  model_name: "/n/fs/vision-mix/rm4411/hf_models/Qwen2.5-1.5B"
+  train_global_batch_size: 1024
+
+data:
+  _override_: true
+  max_input_seq_length: ${policy.max_total_sequence_length}
+  shuffle: true
+  num_workers: 1
+  use_multiple_dataloader: false
+
+  train:
+    dataset_name: "gsm8k"
+    split: train
+
+  validation:
+    dataset_name: "gsm8k"
+    split: test
+
+  default:
+    prompt_file: null
+    system_prompt_file: "examples/prompts/gsm8k.txt"
+    processor: "math_hf_data_processor"
+    env_name: "math"
+
+env:
+  math:
+    p: 0.2
+    x: 0.5
+
+logger:
+  log_dir: "logs_1.5B"
+  wandb:
+    name: "grpo1.5B-gsm8k-b64-r16-p02"

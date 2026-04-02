@@ -351,7 +351,8 @@ env:
   math:
     num_workers: 8
     math_verify_impl: "hf_math_verify"
-    p: 0.0   # <-- your noise rate
+    p: 0.0   # overall verifier error rate
+    x: 0.5   # fraction of errors that are false positives (0→1); remainder are false negatives (1→0)
 
 logger:
   log_dir: "logs"  # Base directory for all logs
