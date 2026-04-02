@@ -110,7 +110,7 @@ class HFVerifyWorker:
                             [ground_truth_parsable], [response]
                         )
                         p = kwargs.get("p", 0.0)
-                        x = kwargs.get("x", 0.5)
+                        x = kwargs.get("x", 0.5)  # fraction of errors that are false positives (0→1); 1-x are false negatives (1→0)
                         clean = int(ret_score)
                         if clean == 0 and self.rng.random() < p * x:
                             ret_score = 1.0  # false positive
