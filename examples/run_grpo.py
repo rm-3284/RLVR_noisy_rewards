@@ -93,7 +93,8 @@ def main() -> None:
     # setup data
     val_env_configs = copy.deepcopy(config["env"])
     for env_name in val_env_configs:
-        val_env_configs[env_name]["p"] = 0.0
+        val_env_configs[env_name]["fp"] = 0.0
+        val_env_configs[env_name]["fn"] = 0.0
     (
         dataset,
         val_dataset,

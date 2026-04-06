@@ -3,9 +3,9 @@ import argparse
 import itertools
 
 DEFAULT_BATCH_SIZES = [16, 32, 64]
-DEFAULT_PS = [0.0, 0.1, 0.2, 0.3, 0.4]
+DEFAULT_FPS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+DEFAULT_FNS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
 DEFAULT_ROLLOUTS = [4, 8, 16, 32, 64]
-DEFAULT_XS = [0.0, 0.25, 0.5, 0.75, 1]
 
 template = """defaults: grpo_math_1B.yaml
 
@@ -43,8 +43,8 @@ data:
 
 env:
   math:
-    p: {p}
-    x: {x}
+    fp: {fp}
+    fn: {fn}
 
 logger:
   log_dir: "{log_dir}"
@@ -76,14 +76,14 @@ def main():
         help=f"Comma-separated rollouts per prompt (default: {DEFAULT_ROLLOUTS})",
     )
     parser.add_argument(
-        "--ps", type=parse_floats, default=DEFAULT_PS,
-        metavar="P1,P2,...",
-        help=f"Comma-separated noise rates p (default: {DEFAULT_PS})",
+        "--fps", type=parse_floats, default=DEFAULT_FPS,
+        metavar="FP1,FP2,...",
+        help=f"Comma-separated false positive rates (default: {DEFAULT_FPS})",
     )
     parser.add_argument(
-        "--xs", type=parse_floats, default=DEFAULT_XS,
-        metavar="X1,X2,...",
-        help=f"Comma-separated false-positive fractions x (default: {DEFAULT_XS})",
+        "--fns", type=parse_floats, default=DEFAULT_FNS,
+        metavar="FN1,FN2,...",
+        help=f"Comma-separated false negative rates (default: {DEFAULT_FNS})",
     )
     parser.add_argument(
         "--model-path", type=str,
@@ -111,20 +111,14 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
 
     count = 0
-    for batch, rollout, p, x in itertools.product(
-        args.batch_sizes, args.rollouts, args.ps, args.xs
+    for batch, rollout, fp, fn in itertools.product(
+        args.batch_sizes, args.rollouts, args.fps, args.fns
     ):
         total_batch = batch * rollout
-        p_str = str(p).replace(".", "")
-        x_str = str(x).replace(".", "")
+        fp_str = f"{fp:.1f}".replace(".", "")
+        fn_str = f"{fn:.1f}".replace(".", "")
 
-        # Only include x in name when it differs from default (0.5) to keep
-        # existing naming convention backwards-compatible.
-        if x != 0.5:
-            run_name = f"{args.run_prefix}-{args.dataset}-b{batch}-r{rollout}-p{p_str}-x{x_str}"
-        else:
-            run_name = f"{args.run_prefix}-{args.dataset}-b{batch}-r{rollout}-p{p_str}"
-
+        run_name = f"{args.run_prefix}-{args.dataset}-b{batch}-r{rollout}-fp{fp_str}-fn{fn_str}"
         filename = run_name.replace("-", "_").lstrip("_") + ".yaml"
         filepath = os.path.join(args.out_dir, filename)
 
@@ -133,8 +127,8 @@ def main():
                 template.format(
                     batch=batch,
                     rollout=rollout,
-                    p=p,
-                    x=x,
+                    fp=fp,
+                    fn=fn,
                     total_batch=total_batch,
                     model_path=args.model_path,
                     dataset=args.dataset,

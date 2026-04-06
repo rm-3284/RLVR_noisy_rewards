@@ -109,12 +109,12 @@ class HFVerifyWorker:
                         ret_score, extracted_answer = self.verify_func(
                             [ground_truth_parsable], [response]
                         )
-                        p = kwargs.get("p", 0.0)
-                        x = kwargs.get("x", 0.5)  # fraction of errors that are false positives (0→1); 1-x are false negatives (1→0)
+                        fp = kwargs.get("fp", 0.0)  # probability of flipping 0 → 1
+                        fn = kwargs.get("fn", 0.0)  # probability of flipping 1 → 0
                         clean = int(ret_score)
-                        if clean == 0 and self.rng.random() < p * x:
+                        if clean == 0 and self.rng.random() < fp:
                             ret_score = 1.0  # false positive
-                        elif clean == 1 and self.rng.random() < p * (1 - x):
+                        elif clean == 1 and self.rng.random() < fn:
                             ret_score = 0.0  # false negative
                         else:
                             ret_score = clean
@@ -471,7 +471,8 @@ class MathEnvironment(BaseMathEnvironment):
                 ground_truth_chunk,
                 return_extracted_answer,
                 math_verify_impl=self.cfg.get("math_verify_impl", "hf_math_verify"),
-                p=self.cfg.get("p", 0.0),
+                fp=self.cfg.get("fp", 0.0),
+                fn=self.cfg.get("fn", 0.0),
             )
             for i, (chunk, ground_truth_chunk) in enumerate(
                 zip(chunked_assistant_response_batch, chunked_ground_truths)
