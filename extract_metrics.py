@@ -1,7 +1,7 @@
 """Extract metrics for batch-32 runs from WandB and output to CSV.
 
 Collects: false positive rate, false negative rate, final validation accuracy,
-final trained accuracy, and num rollouts.
+final trained accuracy, best (max) validation and train accuracy, and num rollouts.
 
 Usage:
     python extract_metrics.py
@@ -55,6 +55,17 @@ def extract_metrics():
         val_accuracy = run.summary.get("validation/accuracy")
         train_accuracy = run.summary.get("train/reward")
 
+        best_val_accuracy = None
+        best_train_accuracy = None
+        for row in run.scan_history(keys=["validation/accuracy"]):
+            v = row.get("validation/accuracy")
+            if v is not None and (best_val_accuracy is None or v > best_val_accuracy):
+                best_val_accuracy = v
+        for row in run.scan_history(keys=["train/reward"]):
+            v = row.get("train/reward")
+            if v is not None and (best_train_accuracy is None or v > best_train_accuracy):
+                best_train_accuracy = v
+
         rows.append({
             "run_name": name,
             "false_positive_rate": fp,
@@ -62,9 +73,12 @@ def extract_metrics():
             "num_rollouts": num_rollouts,
             "final_validation_accuracy": val_accuracy,
             "final_train_accuracy": train_accuracy,
+            "best_validation_accuracy": best_val_accuracy,
+            "best_train_accuracy": best_train_accuracy,
         })
 
-        print(f"  Collected: {name} (fp={fp}, fn={fn}, rollouts={num_rollouts})")
+        print(f"  Collected: {name} (fp={fp}, fn={fn}, rollouts={num_rollouts}, "
+              f"best_val={best_val_accuracy}, best_train={best_train_accuracy})")
 
     if not rows:
         print("No batch-32 runs found.")
@@ -79,6 +93,8 @@ def extract_metrics():
         "num_rollouts",
         "final_validation_accuracy",
         "final_train_accuracy",
+        "best_validation_accuracy",
+        "best_train_accuracy",
     ]
     with open(OUTPUT_FILE, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
