@@ -34,4 +34,28 @@ python "$GENERATOR" \
     --log-dir "logs_1.5B" \
     --run-prefix "grpo1.5B"
 
+echo "Generating configs for Gemma-3-270M..."
+python "$GENERATOR" \
+    --batch-sizes "$BATCH_SIZES" \
+    --rollouts "$ROLLOUTS" \
+    --fps "$FPS" \
+    --fns "$FNS" \
+    --model-path "/n/fs/vision-mix/rm4411/hf_models/gemma-3-270m" \
+    --dataset "$DATASET" \
+    --out-dir "$SCRIPT_DIR/generated_configs_gemma3_270m_fpfn" \
+    --log-dir "logs_gemma3_270m" \
+    --run-prefix "grpo270m"
+
+echo "Generating configs for Gemma-3-1B..."
+python "$GENERATOR" \
+    --batch-sizes "$BATCH_SIZES" \
+    --rollouts "$ROLLOUTS" \
+    --fps "$FPS" \
+    --fns "$FNS" \
+    --model-path "/n/fs/vision-mix/rm4411/hf_models/gemma-3-1b" \
+    --dataset "$DATASET" \
+    --out-dir "$SCRIPT_DIR/generated_configs_gemma3_1b_fpfn" \
+    --log-dir "logs_gemma3_1b" \
+    --run-prefix "grpo1b"
+
 echo "Done."
