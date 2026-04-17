@@ -52,7 +52,7 @@ python "$GENERATOR" \
     --rollouts "$ROLLOUTS" \
     --fps "$FPS" \
     --fns "$FNS" \
-    --model-path "/n/fs/vision-mix/rm4411/hf_models/gemma-3-1b" \
+    --model-path "/n/fs/vision-mix/rm4411/hf_models/gemma-3-1b-pt" \
     --dataset "$DATASET" \
     --out-dir "$SCRIPT_DIR/generated_configs_gemma3_1b_fpfn" \
     --log-dir "logs_gemma3_1b" \

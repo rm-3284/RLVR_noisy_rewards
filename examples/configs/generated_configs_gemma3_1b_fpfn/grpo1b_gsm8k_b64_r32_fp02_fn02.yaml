@@ -8,7 +8,7 @@ grpo:
   num_generations_per_prompt: 32
 
 policy:
-  model_name: "/n/fs/vision-mix/rm4411/hf_models/gemma-3-1b"
+  model_name: "/n/fs/vision-mix/rm4411/hf_models/gemma-3-1b-pt"
   train_global_batch_size: 2048
 
 data:
