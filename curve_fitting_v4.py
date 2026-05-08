@@ -1,25 +1,36 @@
 import csv
+import os
 import numpy as np
 from numpy.linalg import lstsq
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ── Load all data ──
+# ── Load all data (Qwen batch-32 + Gemma if present) ──
 rows = []
-with open("batch32_metrics.csv") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        if row["best_validation_accuracy"].strip() == "":
-            continue
-        rows.append(row)
+for csv_file in ["batch32_metrics.csv", "gemma_metrics.csv"]:
+    if not os.path.exists(csv_file):
+        continue
+    with open(csv_file) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["best_validation_accuracy"].strip() == "":
+                continue
+            rows.append(row)
+
+def _model_size(name):
+    if "grpo270m" in name:
+        return "270M"
+    if "grpo1b" in name:
+        return "1B"
+    return "0.5B" if "0.5B" in name else "1.5B"
 
 run_names = [r["run_name"] for r in rows]
 fp_all = np.array([float(r["false_positive_rate"]) for r in rows])
 fn_all = np.array([float(r["false_negative_rate"]) for r in rows])
 rollouts_all = np.array([float(r["num_rollouts"]) for r in rows])
 val_acc_all = np.array([float(r["best_validation_accuracy"]) for r in rows])
-model_size_all = np.array(["0.5B" if "0.5B" in name else "1.5B" for name in run_names])
+model_size_all = np.array([_model_size(name) for name in run_names])
 
 
 def ols_fit(X, y):
@@ -44,7 +55,7 @@ plt.rcParams.update({
 })
 colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
 
-for size in ["1.5B", "0.5B"]:
+for size in [s for s in ["1.5B", "0.5B", "1B", "270M"] if s in model_size_all]:
     mask = model_size_all == size
     fp = fp_all[mask]
     fn = fn_all[mask]
@@ -150,13 +161,22 @@ for size in ["1.5B", "0.5B"]:
     fn_grid = np.linspace(0, 0.5, 60)
     FP, FN = np.meshgrid(fp_grid, fn_grid)
 
-    rollout_plot_vals = [8, 16, 32]
-    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    available_rollouts = sorted(set(r.tolist()))
+    rollout_plot_vals = [rv for rv in [8, 16, 32] if rv in available_rollouts] or available_rollouts[:3]
+    n_panels = len(rollout_plot_vals)
+    fig, axes = plt.subplots(1, n_panels, figsize=(6 * n_panels, 6))
+    if n_panels == 1:
+        axes = [axes]
     fig.suptitle(f"{size}:  {eq_str}\n(Adj-R² = {best[5]:.3f},  RMSE = {best[6]:.4f})",
                  fontsize=13, y=1.04)
 
-    vmin = 0.0 if size == "0.5B" else 0.2
-    vmax = 0.6 if size == "0.5B" else 0.8
+    _vranges = {"0.5B": (0.0, 0.6), "1.5B": (0.2, 0.8)}
+    if size in _vranges:
+        vmin, vmax = _vranges[size]
+    else:
+        _pad = 0.05
+        vmin = max(0.0, float(y.min()) - _pad)
+        vmax = min(1.0, float(y.max()) + _pad)
 
     for ax_idx, rv in enumerate(rollout_plot_vals):
         ax = axes[ax_idx]
@@ -181,7 +201,7 @@ for size in ["1.5B", "0.5B"]:
     # ════════════════════════════════════════════════════
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     x_plot = np.linspace(0, 0.5, 300)
-    rv_for_slice = 16
+    rv_for_slice = 16 if 16 in available_rollouts else available_rollouts[len(available_rollouts) // 2]
 
     ax = axes[0]
     for i, fn_val in enumerate([0.0, 0.1, 0.2, 0.3, 0.5]):
@@ -222,7 +242,7 @@ for size in ["1.5B", "0.5B"]:
     # FIGURE 3: Pred vs Actual
     # ════════════════════════════════════════════════════
     fig, ax = plt.subplots(figsize=(6.5, 6.5))
-    clr = "steelblue" if size == "1.5B" else "coral"
+    clr = "steelblue" if size in ("1.5B", "1B") else "coral"
     ax.scatter(y, best[3], c=clr, alpha=0.5, edgecolors="k", linewidths=0.3, s=45)
     lims = [min(y.min(), best[3].min()) - 0.03, max(y.max(), best[3].max()) + 0.03]
     ax.plot(lims, lims, "k--", lw=1, alpha=0.5)
