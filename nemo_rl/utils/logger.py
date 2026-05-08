@@ -1227,8 +1227,9 @@ class Logger(LoggerInterface):
 
     def __del__(self) -> None:
         """Clean up resources when the logger is destroyed."""
-        if self.gpu_monitor:
-            self.gpu_monitor.stop()
+        gpu_monitor = getattr(self, "gpu_monitor", None)
+        if gpu_monitor:
+            gpu_monitor.stop()
 
 
 def flatten_dict(d: Mapping[str, Any], sep: str = ".") -> dict[str, Any]:

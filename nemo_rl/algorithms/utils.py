@@ -335,7 +335,14 @@ def get_tokenizer(
             print("Using custom chat template")
             tokenizer.chat_template = tokenizer_config["chat_template"]
     else:
-        print("No chat template provided, using tokenizer's default")
+        if tokenizer.chat_template is None:
+            warnings.warn(
+                "No chat template provided and tokenizer has no default chat template. "
+                "Falling back to passthrough template."
+            )
+            tokenizer.chat_template = COMMON_CHAT_TEMPLATES.passthrough_prompt_response
+        else:
+            print("No chat template provided, using tokenizer's default")
 
     if (
         "chat_template_kwargs" in tokenizer_config

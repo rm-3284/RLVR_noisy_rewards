@@ -406,6 +406,9 @@ def setup(
     # ==========================
     backend = generation_config["backend"]
     generation_config["model_name"] = policy_config["model_name"]  # Needed for vLLM
+    generation_config["_policy_max_total_sequence_length"] = policy_config[
+        "max_total_sequence_length"
+    ]
 
     if backend == "megatron":
         student_generation = None
