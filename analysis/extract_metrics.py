@@ -12,11 +12,13 @@ Usage:
 """
 
 import csv
+import os
 
 import wandb
 
-ENTITY = "rm4411-princeton-university"
-PROJECT = "RLVR"
+# Shared team holding both the existing grid and the new scaling-law runs. Override via WANDB_ENTITY=...
+ENTITY = os.environ.get("WANDB_ENTITY", "rm4411-princeton-university")
+PROJECT = os.environ.get("WANDB_PROJECT", "RLVR")
 OUTPUT_FILE = "batch32_metrics.csv"
 GEMMA_OUTPUT_FILE = "gemma_metrics.csv"
 
