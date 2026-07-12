@@ -990,6 +990,11 @@ class Logger(LoggerInterface):
             to_log: BatchedDataDict to log
             filename: Filename to log to (within the log directory)
         """
+        # Per-step rollout dumps are ~8GB/run and filled the shared scratch fileset (1.5TB).
+        # Disabled by default; set NRL_DUMP_ROLLOUTS=1 to re-enable. Metrics still go to W&B.
+        if os.environ.get("NRL_DUMP_ROLLOUTS") != "1":
+            return
+
         if not isinstance(to_log, BatchedDataDict):
             to_log = BatchedDataDict(to_log)
 
