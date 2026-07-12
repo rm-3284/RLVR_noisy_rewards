@@ -46,3 +46,9 @@ code_snapshots*/
 # Runtime env
 *runtime_env.yaml
 !default_runtime_env.yaml
+
+# launch job-id trackers (ephemeral)
+*_jid
+
+# Paper is separately versioned on Overleaf (its own git repo) — do not nest it here
+overleaf_paper/
