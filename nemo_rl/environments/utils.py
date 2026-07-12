@@ -41,6 +41,9 @@ ENV_REGISTRY: Dict[str, EnvRegistryEntry] = {
     "code": {
         "actor_class_fqn": "nemo_rl.environments.code_environment.CodeEnvironment",
     },
+    "code_verify": {  # unit-test execution verifier + fp/fn noise (RLVR noisy-verifier study)
+        "actor_class_fqn": "nemo_rl.environments.code_verifier_environment.CodeVerifierEnvironment",
+    },
     "reward_model": {
         "actor_class_fqn": "nemo_rl.environments.reward_model_environment.RewardModelEnvironment",
     },
