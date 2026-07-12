@@ -1,0 +1,10 @@
+c2d-gsm8k-1.5B-fp0.0-fn0.0-r512-s1 0.0 0.0 1 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.0-fn0.0-r512-s2 0.0 0.0 2 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.0-fn0.0-r512-s3 0.0 0.0 3 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.0-fn0.0-r512-s4 0.0 0.0 4 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.0-fn0.0-r512-s5 0.0 0.0 5 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.2-fn0.2-r512-s1 0.2 0.2 1 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.2-fn0.2-r512-s2 0.2 0.2 2 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.2-fn0.2-r512-s3 0.2 0.2 3 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.2-fn0.2-r512-s4 0.2 0.2 4 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+c2d-gsm8k-1.5B-fp0.2-fn0.2-r512-s5 0.2 0.2 5 512 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B

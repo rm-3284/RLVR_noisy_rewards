@@ -1,0 +1,15 @@
+olmomath-fp0.45-fn0.45-r8-s1 0.45 0.45 1 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r8-s2 0.45 0.45 2 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r8-s3 0.45 0.45 3 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r8-s4 0.45 0.45 4 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r8-s5 0.45 0.45 5 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r32-s1 0.45 0.45 1 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r32-s2 0.45 0.45 2 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r32-s3 0.45 0.45 3 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r32-s4 0.45 0.45 4 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r32-s5 0.45 0.45 5 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r64-s1 0.45 0.45 1 64 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r64-s2 0.45 0.45 2 64 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r64-s3 0.45 0.45 3 64 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r64-s4 0.45 0.45 4 64 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B
+olmomath-fp0.45-fn0.45-r64-s5 0.45 0.45 5 64 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/OLMo-2-0425-1B

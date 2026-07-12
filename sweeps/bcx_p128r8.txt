@@ -1,0 +1,5 @@
+bcx2-gsm8k-1.5B-p128-r8-s1 0.0 0.0 1 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+bcx2-gsm8k-1.5B-p128-r8-s2 0.0 0.0 2 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+bcx2-gsm8k-1.5B-p128-r8-s3 0.0 0.0 3 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+bcx2-gsm8k-1.5B-p128-r8-s4 0.0 0.0 4 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+bcx2-gsm8k-1.5B-p128-r8-s5 0.0 0.0 5 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B

@@ -1,0 +1,1 @@
+ts3fix-3B-r8-fp0.0-fn0.0-s1 0.0 0.0 1 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-3B

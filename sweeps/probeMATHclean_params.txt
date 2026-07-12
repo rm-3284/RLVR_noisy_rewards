@@ -1,0 +1,5 @@
+pMATH-1.5B-fp0.0-fn0.0-r32-s1 0.0 0.0 1 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+pMATH-1.5B-fp0.0-fn0.0-r32-s2 0.0 0.0 2 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+pMATH-1.5B-fp0.0-fn0.0-r32-s3 0.0 0.0 3 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+pMATH-1.5B-fp0.0-fn0.0-r32-s4 0.0 0.0 4 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B
+pMATH-1.5B-fp0.0-fn0.0-r32-s5 0.0 0.0 5 32 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B

@@ -1,0 +1,1 @@
+q7btp4-fp0.0-fn0.0-r8-s1 0.0 0.0 1 8 /scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-7B
