@@ -26,6 +26,11 @@ from nemo_rl.data.datasets.response_datasets.general_conversations_dataset impor
 )
 from nemo_rl.data.datasets.response_datasets.geometry3k import Geometry3KDataset
 from nemo_rl.data.datasets.response_datasets.gsm8k import GSM8KDataset
+from nemo_rl.data.datasets.response_datasets.math import MATHDataset
+from nemo_rl.data.datasets.response_datasets.mbpp import MBPPDataset
+from nemo_rl.data.datasets.response_datasets.gpqa import GPQADataset
+from nemo_rl.data.datasets.response_datasets.apps import APPSDataset
+from nemo_rl.data.datasets.response_datasets.codecontests import CodeContestsDataset
 from nemo_rl.data.datasets.response_datasets.helpsteer3 import HelpSteer3Dataset
 from nemo_rl.data.datasets.response_datasets.nemogym_dataset import NemoGymDataset
 from nemo_rl.data.datasets.response_datasets.oai_format_dataset import (
@@ -57,6 +62,11 @@ DATASET_REGISTRY = {
     "squad": SquadDataset,
     "tulu3_sft_mixture": Tulu3SftMixtureDataset,
     "gsm8k": GSM8KDataset,
+    "math": MATHDataset,
+    "mbpp": MBPPDataset,
+    "gpqa": GPQADataset,
+    "apps": APPSDataset,
+    "codecontests": CodeContestsDataset,
     # load from local JSONL file or HuggingFace
     "openai_format": OpenAIFormatDataset,
     "NemoGymDataset": NemoGymDataset,
