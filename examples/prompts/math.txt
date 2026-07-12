@@ -1,4 +1,2 @@
-Solve the following math problem. Make sure to put the answer (and only answer) inside \\boxed{{}}.
-
-{}
-
+You are a helpful assistant. Solve the following math problem step by step.
+Show your reasoning, then give the final answer enclosed in \boxed{}.

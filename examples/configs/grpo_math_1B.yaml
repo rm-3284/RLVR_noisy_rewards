@@ -81,7 +81,7 @@ checkpointing:
   save_consolidated: false
 
 policy:
-  model_name: "/n/fs/vision-mix/rm4411/hf_models/Qwen2.5-1.5B"
+  model_name: "/scratch/gpfs/GRIFFITHS/aw2418/hf_models/Qwen2.5-1.5B"  # flat local dir: loads offline on air-gapped compute nodes
   tokenizer:
     name: ${policy.model_name} ## specify if you'd like to use a tokenizer different from the model's default
     chat_template_kwargs: null # can be used to pass kwargs to the chat template, e.g., enable_thinking=true
@@ -351,8 +351,11 @@ env:
   math:
     num_workers: 8
     math_verify_impl: "hf_math_verify"
-    p: 0.0   # overall verifier error rate
-    x: 0.5   # fraction of errors that are false positives (0→1); remainder are false negatives (1→0)
+    # Independent verifier-noise axes (the keys math_environment.py actually reads).
+    # fp = P(flip clean 0 -> 1) = spec false-positive rate x
+    # fn = P(flip clean 1 -> 0) = spec false-negative rate p
+    fp: 0.0
+    fn: 0.0
 
 logger:
   log_dir: "logs"  # Base directory for all logs
