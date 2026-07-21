@@ -31,6 +31,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _slurm_ray_sizing():
+    """Size a local Ray instance to THIS Slurm allocation, not the physical node.
+
+    Ray autodetection reads /proc (the whole box: all CPUs, all RAM), so on a shared node with
+    several co-scheduled tasks it over-reserves the /dev/shm object store and tasks then wedge
+    waiting on shared memory that never arrives. We instead read the cgroup CPU affinity and
+    SLURM_MEM_PER_NODE. Returns (num_cpus, object_store_bytes); object_store is None (=Ray
+    default) if SLURM_MEM is unknown.
+    """
+    ncpu = len(os.sched_getaffinity(0))
+    mb = os.environ.get("SLURM_MEM_PER_NODE", "").strip()
+    obj = int(int(mb) * 1024 * 1024 * 0.10) if mb.isdigit() and int(mb) > 0 else None
+    logger.info("Sizing Ray to Slurm allocation: num_cpus=%s object_store_bytes=%s", ncpu, obj)
+    return ncpu, obj
+
+
 class ClusterConfig(TypedDict):
     gpus_per_node: int
     num_nodes: int
@@ -155,12 +171,15 @@ def init_ray(log_dir: Optional[str] = None) -> None:
         local_runtime_env.pop("working_dir", None)
         # Local cluster only; dashboard off to avoid fixed-port clashes when multiple jobs
         # share one node.
+        _ray_ncpu, _ray_obj = _slurm_ray_sizing()
         ray.init(
             log_to_driver=True,
             include_dashboard=False,
             runtime_env=local_runtime_env,
             _temp_dir=abs_session,
             resources={cvd_tag: 1},
+            num_cpus=_ray_ncpu,
+            object_store_memory=_ray_obj,
         )
         logger.info(
             "Started isolated local Ray cluster in %s with tag %r: %s",
@@ -224,12 +243,15 @@ def init_ray(log_dir: Optional[str] = None) -> None:
     local_runtime_env = dict(runtime_env)
     local_runtime_env.pop("working_dir", None)
 
+    _ray_ncpu, _ray_obj = _slurm_ray_sizing()
     ray.init(
         log_to_driver=True,
         include_dashboard=True,
         runtime_env=local_runtime_env,
         _temp_dir=os.path.abspath(log_dir) if log_dir else None,
         resources={cvd_tag: 1},
+        num_cpus=_ray_ncpu,
+        object_store_memory=_ray_obj,
     )
     logger.info(
         f"Started local cluster with tag '{cvd_tag}': {ray.cluster_resources()}"
