@@ -1,3 +1,21 @@
+# CAIS + Della job split — 2026-07-25
+
+**Division of labor (CAIS does NOT need to do everything):**
+- **Della (Princeton):** runs **`v4f1` (Falcon-1B)** cells from `sweeps/cais_falcon_math.txt` — 1B fits any
+  a100 (no gpu80), so it uses Della spare capacity without fighting the v4q3 3B priority. (Della already has
+  the Falcon models + math dataset + launchers.)
+- **CAIS (all a100-80GB):** runs **`v4f3` (Falcon-3B)** cells from the same sweep (needs 80GB) **+ the
+  Qwen-3B fp0.45 mop-up** below.
+
+## Second CAIS sweep: Qwen-3B fp0.45 fill (completes a CORE grid)
+`sweeps/cais_q3_fp45_fill.txt` — **80 cells**: the fp/fn=0.45 margin cells of the v4q3 MATH master grid that
+are missing or undertrained (<step90) — they got clipped by Della's 24h wall (esp. r128). Same `v4q3-*` run
+names so they slot into the existing grid; MODEL=`MODELS/Qwen2.5-3B` (already staged on CAIS). **Give them
+longer walltime so they train past the MATH peak (~step 90).** Higher-value than net-new cells — it finishes
+a core Qwen family grid. Launch with the same MATH override as below.
+
+---
+
 # CAIS job: Falcon MATH master grid (third family) — 2026-07-25
 
 **Why:** Falcon3 is a genuine non-Qwen/non-OLMo family that takes off on MATH under RLVR
