@@ -13,6 +13,16 @@ dedup-by-max-step slot them straight into the existing grid.
 - Rollouts: **32× r128, 16× r32, 28× r8**. Model = `MODELS/Qwen2.5-3B` (already staged on CAIS for the
   earlier fp0.45 fill).
 
+## Pull — CHECKOUT-ONLY, do NOT `git pull`/merge
+This branch is built on **Della's** tree and lacks CAIS infra — a merge would delete `jobscripts/grpo_cais.sh`,
+`cais_env.sh`, `launch_sweep_cais.sh` and revert the `virtual_cluster.py` Ray-cgroup fix (`f8e3662`), breaking
+the live campaign. Grab only the two new files:
+```
+git fetch origin
+git checkout origin/backup/analysis-sweeps-infra-2026-07-11 -- \
+  sweeps/cais_v4q3_remainder.txt PUSH_CAIS_Q3_REMAINDER.md
+```
+
 ## Coordination — NO duplication
 - The **other 148** v4q3 cells already have a clean 234 run — **do NOT re-run them**.
 - Della is finishing **16** in-flight v4q3 cells (its 20-GPU slice) — those are **NOT** in this sweep.
@@ -27,8 +37,8 @@ EXTRA_OVERRIDES="data.train.dataset_name=math data.validation.dataset_name=math 
   policy.train_micro_batch_size=1 policy.dtensor_cfg.activation_checkpointing=true \
   checkpointing.enabled=false"
 ```
-- **WALLTIME: give r128 enough to actually reach step 234 (~48–50h on A100-80GB → set the array to ≥60h).**
-  The whole point of redoing the 12 timeout cells is a *clean* 234, so don't re-clip them at a short wall.
-  r8/r32 finish in a few hours.
+- **WALLTIME: use CAIS's max = 48h** (CAIS QOS caps here — NOT Della's 60/72h). 48h is enough for a 3B r128
+  on A100-80GB — the Falcon-3B r128 cells completed under this cap — so the redone timeout cells still reach a
+  clean 234. Just confirm the r128 step-rate projects under 48h. r8/r32 finish in a few hours.
 - CAIS is all A100-**80GB** → **no** `gpu80`/`nomig` constraint needed.
 - Throttle the array `%` to available A100s. **Read PEAK accuracy for analysis** (MATH degrades late).
