@@ -6,13 +6,14 @@ crashes, MIG fast-fails, and 48h-wall timeouts. CAIS (freed from the Falcon-3B g
 Same W&B project (`rm4411-princeton-university/RLVR`) + **same run names** → Della-side analysis and
 dedup-by-max-step slot them straight into the existing grid.
 
-## The sweep  (REBUILT 2026-08-08 from AUTHORITATIVE W&B `_step`, not local logs)
-`sweeps/cais_v4q3_remainder.txt` — **94 cells**, format `RUN_NAME FP FN SEED ROLLOUTS MODELPATH`.
-- These are every v4q3 cell whose **max W&B `_step` < 90** (never reached the MATH peak) — i.e. genuine
-  MIG-fast-fail / timeout / OOM / early-crash failures — **minus the 16 cells still finishing on Della**.
-- Rollouts: **34× r128, 44× r32, 16× r8**. Model = `MODELS/Qwen2.5-3B` (already staged on CAIS).
-- NOTE: the earlier 76-cell version was built from a local `output.log` grep that matched phantom
-  `Step 234/234` lines and under-covered by ~80 real failures. Use W&B `_step` (dedup max) as truth.
+## The sweep  (REBUILT 2026-08-08 from AUTHORITATIVE W&B `_step`, PRISTINE standard)
+`sweeps/cais_v4q3_remainder.txt` — **126 cells**, format `RUN_NAME FP FN SEED ROLLOUTS MODELPATH`.
+- Every v4q3 cell that did NOT finish the full epoch (max W&B `_step` < 200 for r128, < 228 for r8/r32) —
+  i.e. sub-peak failures **and** cut-short timeouts — **minus the 16 cells finishing to full on Della**.
+- Rollouts: **56× r128, 44× r32, 26× r8**. Model = `MODELS/Qwen2.5-3B` (already staged on CAIS).
+- Only the **98 genuinely-complete** cells + Della's 16 in-flight are left out. 98 + 16 + 126 = 240.
+- History: 76 (local grep, phantom `Step 234/234`) → 94 (W&B `_step<90`, missed the timeouts) → **126**
+  (W&B, full-epoch standard, no corners). Use W&B `_step` (dedup max) as truth.
 
 ## Pull — CHECKOUT-ONLY, do NOT `git pull`/merge
 This branch is built on **Della's** tree and lacks CAIS infra — a merge would delete `jobscripts/grpo_cais.sh`,
