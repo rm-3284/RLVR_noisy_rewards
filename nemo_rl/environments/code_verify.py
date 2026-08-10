@@ -59,9 +59,11 @@ _APPTAINER_SIF = os.environ.get("CODE_SANDBOX_SIF", "/scratch/gpfs/GRIFFITHS/aw2
 _HAVE_APPTAINER = os.path.exists("/usr/bin/apptainer") and os.path.exists(_APPTAINER_SIF)
 _APPTAINER = [
     "apptainer", "exec", "--containall", "--net", "--network", "none",
-    "--no-home", "--memory", "2048M", "--pids-limit", "256",
-    # NO --writable-tmpfs: rootfs (incl /usr) stays READ-ONLY; --containall still gives a writable
-    # isolated tmpfs /tmp for legit temp files. So untrusted code can't write system dirs even ephemerally.
+    "--no-home", "--pwd", "/tmp",
+    # NO --memory/--pids-limit: they need a user cgroup (XDG_RUNTIME_DIR) that a Slurm job doesn't provide
+    #   -> apptainer FATALs inside a job. Resource bounds come instead from Slurm's own job cgroup (--mem
+    #   OOM-kills the job) + the wall timeout + the PID namespace (--containall). NO --writable-tmpfs:
+    #   rootfs (incl /usr) stays READ-ONLY; --containall gives a writable isolated tmpfs /tmp.
     _APPTAINER_SIF,
 ]
 
