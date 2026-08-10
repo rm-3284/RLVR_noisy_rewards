@@ -52,3 +52,5 @@ code_snapshots*/
 
 # Paper is separately versioned on Overleaf (its own git repo) — do not nest it here
 overleaf_paper/
+.sif
+*.sif

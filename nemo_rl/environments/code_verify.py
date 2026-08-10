@@ -48,6 +48,23 @@ _SANDBOX_PY = "/usr/bin/python3"
 _SANDBOX_ENV = {"PATH": "/usr/bin:/bin", "HOME": "/tmp", "LANG": "C.UTF-8",
                 "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
 
+# ---- Apptainer sandbox (PREFERRED) — bwrap needs user namespaces, which Della disabled
+# (max_user_namespaces=0) in an Aug-2026 security update. Apptainer runs setuid (privileged starter),
+# so it builds its namespaces as root and works even with userns off. --containall = isolated fs (NO host
+# binds -> /scratch,/home unreachable) + clean env + pid/ipc ns; --net --network none = no network;
+# --writable-tmpfs = ephemeral overlay; --memory/--pids-limit = cgroup caps (memory + fork bombs).
+# Untrusted code runs as the unprivileged user inside -> no privilege escalation.
+# Proven by nemo_rl/environments/test_sandbox_containment.py (all 6 checks must pass).
+_APPTAINER_SIF = os.environ.get("CODE_SANDBOX_SIF", "/scratch/gpfs/GRIFFITHS/aw2418/code_sandbox.sif")
+_HAVE_APPTAINER = os.path.exists("/usr/bin/apptainer") and os.path.exists(_APPTAINER_SIF)
+_APPTAINER = [
+    "apptainer", "exec", "--containall", "--net", "--network", "none",
+    "--no-home", "--memory", "2048M", "--pids-limit", "256",
+    # NO --writable-tmpfs: rootfs (incl /usr) stays READ-ONLY; --containall still gives a writable
+    # isolated tmpfs /tmp for legit temp files. So untrusted code can't write system dirs even ephemerally.
+    _APPTAINER_SIF,
+]
+
 
 def _sandbox_rlimits():
     """Resource caps inherited into the sandboxed child: CPU, address space, file size.
@@ -66,16 +83,22 @@ def _sandbox_rlimits():
 
 
 def _run_untrusted(program: str, timeout: float, stdin: str | None = None):
-    """Execute untrusted `program` inside the bwrap sandbox + rlimits.
-    FAIL CLOSED: if bwrap is unavailable, refuse to run (never execute untrusted code unsandboxed)."""
-    if not _HAVE_BWRAP:
-        raise RuntimeError(
-            "SANDBOX UNAVAILABLE: /usr/bin/bwrap missing — refusing to execute untrusted code")
-    return subprocess.run(
-        _BWRAP + [_SANDBOX_PY, "-I", "-c", program],
-        input=stdin, capture_output=True, timeout=timeout, text=True,
-        preexec_fn=_sandbox_rlimits, env=_SANDBOX_ENV,
-    )
+    """Execute untrusted `program` in an isolated sandbox. FAIL CLOSED: refuse if none available.
+    Prefers Apptainer (works where user namespaces are disabled — Della); falls back to bwrap (Ionic)."""
+    if _HAVE_APPTAINER:
+        # --containall cleans the env inside the container; the outer apptainer inherits env to find itself.
+        return subprocess.run(
+            _APPTAINER + ["python3", "-I", "-c", program],
+            input=stdin, capture_output=True, timeout=timeout, text=True,
+        )
+    if _HAVE_BWRAP:
+        return subprocess.run(
+            _BWRAP + [_SANDBOX_PY, "-I", "-c", program],
+            input=stdin, capture_output=True, timeout=timeout, text=True,
+            preexec_fn=_sandbox_rlimits, env=_SANDBOX_ENV,
+        )
+    raise RuntimeError(
+        "SANDBOX UNAVAILABLE: neither Apptainer+SIF nor bwrap — refusing to execute untrusted code")
 
 
 def extract_code(text: str) -> str:
@@ -168,14 +191,46 @@ def run_apps(candidate: str, io: dict, timeout: float = 8.0) -> bool:
     return True
 
 
+def run_kodcode(candidate: str, test: str, timeout: float = 8.0) -> bool:
+    """True iff candidate passes ALL KodCode pytest-style tests (plain-assert only).
+    KodCode tests are `from solution import fn` + `def test_x(): assert fn(...)==...`. The candidate
+    is expected to define `fn` (the required name is put in the prompt), so we inline the candidate,
+    strip the `from solution import` line, then call every `test_*` function; any exception
+    (Assertion/NameError/...) counts as a failure. Pass = at least one test ran and none failed.
+    No pytest dependency — the loader filters out capsys/pytest/heavy-lib tests."""
+    if not candidate.strip() or not test.strip():
+        return False
+    test_body = "\n".join(
+        ln for ln in test.splitlines()
+        if not (ln.lstrip().startswith("from solution import") or ln.lstrip().startswith("import solution"))
+    )
+    runner = (
+        "\nimport sys as _s\n_fail = 0\n_ran = 0\n"
+        "for _n, _f in list(globals().items()):\n"
+        "    if _n.startswith('test_') and callable(_f):\n"
+        "        _ran += 1\n"
+        "        try:\n            _f()\n        except Exception:\n            _fail += 1\n"
+        "_s.exit(0 if (_ran > 0 and _fail == 0) else 1)\n"
+    )
+    program = _GUARD + _IMPORTS + candidate + "\n" + test_body + runner
+    try:
+        return _run_untrusted(program, timeout).returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+    except Exception:
+        return False
+
+
 def score_one(prediction: str, ground_truth_json: str, timeout: float = 8.0) -> float:
     """1.0 if the prediction passes all tests, else 0.0.
-    Auto-detects gt format: MBPP {tests,setup} vs APPS {inputs,outputs[,fn_name]}."""
+    Auto-detects gt format: KodCode {pytest_test} vs MBPP {tests,setup} vs APPS {inputs,outputs[,fn_name]}."""
     try:
         gt = json.loads(ground_truth_json)
     except Exception:
         return 0.0
     code = extract_code(prediction)
+    if "pytest_test" in gt:  # KodCode pytest-style (plain asserts)
+        return 1.0 if run_kodcode(code, gt["pytest_test"], timeout) else 0.0
     if "inputs" in gt:  # APPS io-based
         return 1.0 if run_apps(code, gt, timeout) else 0.0
     return 1.0 if run_tests(code, gt.get("setup", ""), gt.get("tests", []), timeout) else 0.0
