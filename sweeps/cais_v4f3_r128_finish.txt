@@ -1,0 +1,7 @@
+v4f3-r128-fp0.0-fn0.15-s1 0.0 0.15 1 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.15-s2 0.0 0.15 2 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.15-s3 0.0 0.15 3 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.15-s4 0.0 0.15 4 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.15-s5 0.0 0.15 5 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.45-s4 0.0 0.45 4 128 MODELS/Falcon3-3B-Base
+v4f3-r128-fp0.0-fn0.45-s5 0.0 0.45 5 128 MODELS/Falcon3-3B-Base
